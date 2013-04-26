@@ -26,11 +26,13 @@ db=postgresql:postgresql-client
 sc=git-core
 m=tmux:zsh
 rb=ruby-full
+gemv=1.5.2 	#SET THIS TO RUBY GEM VERSION
 
 ### Remote Pairing Machine bootstrap
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 RHOME=/home/${RUSER}
 TMP=/tmp
-PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+I=`which apt-get`
 
 # Create user accounts
 cuser() {
@@ -41,26 +43,30 @@ cuser() {
 }
 
 # Add multiverse repositories (for EC2 tools)
-sl=/etc/apt/sources.list
-sed 's/[Uu]niverse/& multiverse/g' < $sl > ${TMP}/sl.tmp
-mv ${TMP}/sl.tmp $sl
+mod_repo() {
+	sl=/etc/apt/sources.list
+
+	sed 's/[Uu]niverse/& multiverse/g' < $sl > $TMP/sl.tmp
+	mv $TMP/sl.tmp $sl
+}
 
 debootstap() {
 	p=`tr ':' ' ' <<EOF
 	${db}:${sc}:${m}:${rb}
 	EOF`
-	i=`which apt-get`
-	$i update && $i install -y $p
+	i=${I}' install -y'
+	$I update && $i install -y $p
 }
 `debootstrap`
 
 gstrap() { #Rubygem Bootstrap
+	
 
 	d=/usr/bin
 	g=$d/gem
 	dl=`which wget`' -O ' # set this to full path to avoid hash conflicts
 
-	f='rubygems-1.5.2.tgz'
+	f=rubygems-${gemv}.tgz
 	rg="http://production.cf.rubygems.org/rubygems/${f}"
 
 	if [ ! -x $g];

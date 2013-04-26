@@ -1,0 +1,29 @@
+Automate as much as possible. 
+
+split bootstrap.sh into root and user based scripts to deal
+with simplifying rvms user based install
+
+remove .sh from bootstrap.sh to provide sane interface
+
+Currently thinking for root a check will be made to confirm
+user is actually root for it's activitys
+
+for rvm install the a test will be made for both 'dev' user
+and dependencies. 
+
+Automate as much as possible.
+
+interface make be simple as:
+
+sudo bootstrap; bootstrap -rvm
+
+have bootstrap automate the creation of the command to
+connect to the aws instance via ssh.
+Automate as much as possible.
+
+Provide verbosity for the end user one setting up their paths
+provide url for the generated 'repair' command.
+
+Automate as much as possible. 
+
+AUTOMATE EVERYTHING!
