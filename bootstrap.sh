@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 #!/bin/sh
 ##########################################################################
 # Title      :  repair - Remote Pairing and bootstrap
@@ -32,7 +31,6 @@ RHOME=/home/${RUSER}
 TMP=/tmp
 
 ### Remote Pairing Machine bootstrap
-set -ev # do we need this verbosity?
 PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
 # Create user accounts
@@ -47,15 +45,15 @@ cuser() {
 #sudo perl -p -i -e 's/universe/universe multiverse/go' /etc/apt/sources.list
 # You don't need a chainsaw here. sed is meant for this sort of thing
 sl=/etc/apt/sources.list
-sed 's/[uU]niverse/& multiverse/g' < $sl > ${TMP}/sl.tmp
+sed 's/[Uu]niverse/& multiverse/g' < $sl > ${TMP}/sl.tmp
 mv ${TMP}/sl.tmp $sl
 
 debootstap() {
 	p=`tr ':' ' ' <<EOF
 	${db}:${sc}:${m}:${rb}
 	EOF`
-	i=`which apt-get`' install -y '
-	$i update && $i $p
+	i=`which apt-get`
+	$i update && $i install -y $p
 }
 `debootstrap`
 
@@ -79,43 +77,45 @@ gstrap() { #Rubygem Bootstrap
 }
 
 # RVM hmm. This should be a separate user script
-if ! [ -e ~pair/.rvm ]; then
-    (
-        cd /tmp
-        curl -L https://get.rvm.io | sudo -i -u dev bash -s stable
-    )
-fi
-
-# .bashrc for the "dev" user
-cat <<'EOF' > /tmp/new_bashrc
-
-# Local executables
-PATH=$PATH:~/bin
-
-# Ruby Version Manager (RVM)
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
-EOF
-
-# Login message
-cat <<'EOF' > /tmp/motd
-
-    OMG, hi there!!1!
-
-    This machine should be all set for a great pairing session.
-
-    Don't forget to terminate this instance when you're done.
-
-    Have fun! <3 <3 <3
-
-EOF
-
-sudo mv /tmp/motd /etc/
-
-# Enable password-less `sudo` for the users in the "sudo" group:
-cat <<'EOF' > /tmp/new_sudoers
-
-# Enable password-less sudo for all users in the "sudo" group
-%sudo ALL=NOPASSWD: ALL
-
-EOF
-sudo sh -c 'cat /tmp/new_sudoers >> /etc/sudoers'
+# the rest is commented out for future refactor fun!
+# 
+# if ! [ -e ~pair/.rvm ]; then
+#     (
+#         cd /tmp
+#         curl -L https://get.rvm.io | sudo -i -u dev bash -s stable
+#     )
+# fi
+# 
+# # .bashrc for the "dev" user
+# cat <<'EOF' > /tmp/new_bashrc
+# 
+# # Local executables
+# PATH=$PATH:~/bin
+# 
+# # Ruby Version Manager (RVM)
+# [[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
+# EOF
+# 
+# # Login message
+# cat <<'EOF' > /tmp/motd
+# 
+#     OMG, hi there!!1!
+# 
+#     This machine should be all set for a great pairing session.
+# 
+#     Don't forget to terminate this instance when you're done.
+# 
+#     Have fun! <3 <3 <3
+# 
+# EOF
+# 
+# sudo mv /tmp/motd /etc/
+# 
+# # Enable password-less `sudo` for the users in the "sudo" group:
+# cat <<'EOF' > /tmp/new_sudoers
+# 
+# # Enable password-less sudo for all users in the "sudo" group
+# %sudo ALL=NOPASSWD: ALL
+# 
+# EOF
+# sudo sh -c 'cat /tmp/new_sudoers >> /etc/sudoers'
