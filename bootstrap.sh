@@ -29,39 +29,39 @@ rb=ruby-full
 gemv=1.5.2 	#SET THIS TO RUBY GEM VERSION
 
 ### Remote Pairing Machine bootstrap
-PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 RHOME=/home/${RUSER}
 TMP=/tmp
-I=`which apt-get`
+APT=`which apt-get`
 
 # Create user accounts
 cuser() {
-	useradd $RUSER -m -s /bin/bash -G sudo,adm,dialout,cdrom,floppy,audio,dip,video,plugdev,admin,wheel,operator # post postgres compile mod /etc/group 
+	# may want to use zsh for user
+	# default will be bash
+	useradd $RUSER -m -s $SHELL -G sudo,adm,dialout,cdrom,floppy,audio,dip,video,plugdev,admin,wheel,operator # post postgres compile mod /etc/group 
 
 	kg="ssh-keygen -f ${RHOME}.ssh/id_rsa -t rsa -C 'dev@pairingmachine' -P \"\"\"\"\"" # ooh fun with quoting =) 
 	su -m $RUSER -c $kg
 }
 
 # Add multiverse repositories (for EC2 tools)
-mod_repo() {
+mrepo() {
 	sl=/etc/apt/sources.list
 
-	sed 's/[Uu]niverse/& multiverse/g' < $sl > $TMP/sl.tmp
-	mv $TMP/sl.tmp $sl
+	sed 's/[Uu]niverse/& multiverse/g' < $sl > $TMP/`basename ${sl}.tmp`
+	mv $TMP/`basename ${sl}.tmp` $sl
 }
 
-debootstap() {
+aptpupil() {
 	p=`tr ':' ' ' <<EOF
 	${db}:${sc}:${m}:${rb}
-	EOF`
-	i=${I}' install -y'
-	$I update && $i install -y $p
-}
-`debootstrap`
+	EOF` # λ
 
-gstrap() { #Rubygem Bootstrap
-	
+	$APT update && $APT install -y $p
+	# hash -r # check if this works on bash
+} # apt-pupil
+`aptpupil`
 
+gembootstrap() { 
 	d=/usr/bin
 	g=$d/gem
 	dl=`which wget`' -O ' # set this to full path to avoid hash conflicts
