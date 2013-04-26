@@ -3,7 +3,7 @@
 # Title      :  repair - Remote Pairing and bootstrap
 # Author     :  Jon Allured     <jon@jonallured.com>
 #            :  Stuart Gerstein <stu@rubyprogrammer.net>
-# Date       :  2010-09-19
+# Date       :  2013-04-25
 # Requires   :  Debian on AWS
 # Category   :  File Utilities
 ##########################################################################
@@ -27,10 +27,9 @@ sc=git-core
 m=tmux:zsh
 rb=ruby-full
 
+### Remote Pairing Machine bootstrap
 RHOME=/home/${RUSER}
 TMP=/tmp
-
-### Remote Pairing Machine bootstrap
 PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
 # Create user accounts
@@ -42,8 +41,6 @@ cuser() {
 }
 
 # Add multiverse repositories (for EC2 tools)
-#sudo perl -p -i -e 's/universe/universe multiverse/go' /etc/apt/sources.list
-# You don't need a chainsaw here. sed is meant for this sort of thing
 sl=/etc/apt/sources.list
 sed 's/[Uu]niverse/& multiverse/g' < $sl > ${TMP}/sl.tmp
 mv ${TMP}/sl.tmp $sl
@@ -59,11 +56,12 @@ debootstap() {
 
 gstrap() { #Rubygem Bootstrap
 
+	d=/usr/bin
+	g=$d/gem
+	dl=`which wget`' -O ' # set this to full path to avoid hash conflicts
+
 	f='rubygems-1.5.2.tgz'
 	rg="http://production.cf.rubygems.org/rubygems/${f}"
-	dl=`which wget`' -O ' # set this to full path to avoid hash conflicts
-	g=/usr/bin/gem
-	d=/usr/bin
 
 	if [ ! -x $g];
 	then

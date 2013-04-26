@@ -8,6 +8,8 @@ Inspired by a few other projects:
 https://github.com/stuartsierra/pairhost
 https://syme.herokuapp.com/
 
+See COPYING file for License.
+
 What you do
 -----------
 
