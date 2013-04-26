@@ -1,48 +1,84 @@
 #!/usr/bin/env bash
+#!/bin/sh
+##########################################################################
+# Title      :  repair - Remote Pairing and bootstrap
+# Author     :  Jon Allured     <jon@jonallured.com>
+#            :  Stuart Gerstein <stu@rubyprogrammer.net>
+# Date       :  2010-09-19
+# Requires   :  Debian on AWS
+# Category   :  File Utilities
+##########################################################################
+# Description
+#    o  "repair" simply bootstraps a debian box 
+#	for Ruby on Rails hacking and pair programming
+#    o  NOTES: This script is for study only at this time
+#	DO NOT RUN THIS AT ALL IT WILL SUCK YOUR BRAIN OUT AND PASS IT
+#	PAST /etc ONLY TO BE BLUGENDED AND DISCARDED TO /dev/null
+# Examples:
+#	There are no examples at this time as the script is vapor
+#	Hopefully my contribution won't be stillbourne =P
+#
+##########################################################################
+
+RUSER=dev # THIS NEEDS TO BE SET TO THE REMOTE USER NAME
+
+#set your stacks dependencies and extentions:
+db=postgresql:postgresql-client
+sc=git-core
+m=tmux:zsh
+rb=ruby-full
+
+RHOME=/home/${RUSER}
+TMP=/tmp
 
 ### Remote Pairing Machine bootstrap
-
-set -ev
-
+set -ev # do we need this verbosity?
 PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
 # Create user accounts
-sudo useradd dev -m -s /bin/bash -G sudo,adm,dialout,cdrom,floppy,audio,dip,video,plugdev,admin
+cuser() {
+	useradd $RUSER -m -s /bin/bash -G sudo,adm,dialout,cdrom,floppy,audio,dip,video,plugdev,admin,wheel,operator # post postgres compile mod /etc/group 
 
-sudo -i -u dev ssh-keygen -f /home/dev/.ssh/id_rsa -t rsa -C "dev@pairingmachine" -P \"\"\"\"\"
+	kg="ssh-keygen -f ${RHOME}.ssh/id_rsa -t rsa -C 'dev@pairingmachine' -P \"\"\"\"\"" # ooh fun with quoting =) 
+	su -m $RUSER -c $kg
+}
 
 # Add multiverse repositories (for EC2 tools)
-sudo perl -p -i -e 's/universe/universe multiverse/go' /etc/apt/sources.list
+#sudo perl -p -i -e 's/universe/universe multiverse/go' /etc/apt/sources.list
+# You don't need a chainsaw here. sed is meant for this sort of thing
+sl=/etc/apt/sources.list
+sed 's/[uU]niverse/& multiverse/g' < $sl > ${TMP}/sl.tmp
+mv ${TMP}/sl.tmp $sl
 
-# Update packages
-sudo apt-get update
+debootstap() {
+	p=`tr ':' ' ' <<EOF
+	${db}:${sc}:${m}:${rb}
+	EOF`
+	i=`which apt-get`' install -y '
+	$i update && $i $p
+}
+`debootstrap`
 
-# Databases
-sudo apt-get install -y postgresql postgresql-client
+gstrap() { #Rubygem Bootstrap
 
-# source control
-sudo apt-get install -y git-core
+	f='rubygems-1.5.2.tgz'
+	rg="http://production.cf.rubygems.org/rubygems/${f}"
+	dl=`which wget`' -O ' # set this to full path to avoid hash conflicts
+	g=/usr/bin/gem
+	d=/usr/bin
 
-# Misc development tools and native libraries
-sudo apt-get install -y tmux zsh
+	if [ ! -x $g];
+	then
+		$dl $rg > ${TMP}/${f}
+		# you probably want to set up a checksum check here
+		tar -xzf ${TMP}/${f} -C $TMP
+		f=${TMP}/`basename -s '.'$(basename -- 'tgz' $f) $f`
+		ruby $f/setup.rb
+	        ln -s $d/gem1.8 $d/gem
+	fi
+}
 
-# Ruby
-sudo apt-get install -y ruby-full
-
-# Rubygems
-if ! [ -e /usr/bin/gem ]; then
-    (
-        cd /tmp
-        wget http://production.cf.rubygems.org/rubygems/rubygems-1.5.2.tgz
-        tar xzf rubygems-1.5.2.tgz
-        cd rubygems-1.5.2
-        sudo ruby setup.rb
-        cd /usr/bin
-        sudo ln -s gem1.8 gem
-    )
-fi
-
-# RVM
+# RVM hmm. This should be a separate user script
 if ! [ -e ~pair/.rvm ]; then
     (
         cd /tmp
